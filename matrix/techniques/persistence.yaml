@@ -118,7 +118,7 @@ techniques:
     real_world_examples:
       - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
         url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
-        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-10-21"
         attribution: "A landing page sent get-ext-uid and reused the UID of any installed family member; 'Free Digital Books Online' stored the same UID as 'View Point 3D Earth' despite a different campaign and domain."
     references:

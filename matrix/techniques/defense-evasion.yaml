@@ -26,7 +26,7 @@ techniques:
         attribution: "Malicious logic was hidden inside a modified jQuery library and steganographically inside an image, base64-encoded and obfuscated to evade Chrome Web Store review."
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "StegoAd hid executable JavaScript via steganography — appended after the PNG IEND marker of the extension's own icon, inside externally fetched PNG/WebP containers, and even within WOFF2 font files — then decoded it through layered case-swap, digit-swap, Base64 and XOR transforms, so static scanners saw only benign image/font data."
     references:
@@ -59,7 +59,7 @@ techniques:
         attribution: "The 'Email Hunter' extension in the cluster was observed likely region-blocking the United States — an example of geo-conditioned behavior to evade scrutiny."
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "StegoAd extensions stayed silent for a 3–5 day time-gate to survive sandbox analysis, fired the payload only probabilistically, and detected whether DevTools was open — hiding indefinitely if an analyst was watching."
     references:
@@ -98,7 +98,7 @@ techniques:
         attribution: "The Great Suspender's 'license check' returned a reassuring response on first download, then delivered the real (malicious redirect) configuration only a few hours later to evade review."
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "StegoAd's C2 performed server-side request validation — researchers probing the payload URLs directly received empty responses, so the malicious image payload was only served to genuine post-install victims that passed the operator's gating checks."
     references:
@@ -219,7 +219,7 @@ techniques:
     real_world_examples:
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "StegoAd stayed silent for a 3–5 day time-gate to survive sandbox analysis, detected whether DevTools was open and hid indefinitely if so, and its C2 performed server-side request validation — serving empty responses to researchers probing payload URLs directly."
     references:
@@ -274,7 +274,7 @@ techniques:
     real_world_examples:
       - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
         url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
-        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-10-21"
         attribution: "Direct store installs lacked the activation ticket and never contacted C2; ad-funnel installs copied the ticket from the landing domain's localStorage into extension storage, enabling URL/title reporting, ad injection and affiliate redirects. Builds shipped with a server-side enable flag off."
     references:
@@ -334,7 +334,7 @@ techniques:
     real_world_examples:
       - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
         url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
-        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-10-21"
         attribution: "Injected content rendered in a high-stacking shadow root hidden from page scripts and many ad blockers; a server-maintained list excluded AI assistants, healthcare/genetic-data portals, tax software, account pages and high-trust brands. Disabling 'Sponsored content' stopped visible ads but not URL/title reporting."
     references:

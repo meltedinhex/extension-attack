@@ -157,7 +157,7 @@ techniques:
     real_world_examples:
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "StegoAd (119 extensions, up to 2.6M installs) hid executable JavaScript after the PNG IEND marker of its own icon, inside externally fetched PNG/WebP containers, and within bundled WOFF2 font files, then decoded it through layered case-swap/digit-swap/Base64/XOR transforms and executed it at runtime."
     references:

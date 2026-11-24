@@ -64,7 +64,7 @@ techniques:
         attribution: "Extensions including 'Translator - Select to Translate' and the taken-over 'The Great Suspender' redirected shopping sessions to inject the operator's affiliate ID (e.g. replacing Booking.com's aid parameter) to earn commissions."
       - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
         url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
-        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-10-21"
         attribution: "When the C2 server detected shopping intent it returned a server-controlled destination URL carrying the operator's affiliate tag (e.g. an Amazon link), which the extension opened without validating it."
     references:

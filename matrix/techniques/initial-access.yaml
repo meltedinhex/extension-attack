@@ -193,7 +193,7 @@ techniques:
         attribution: "50+ 'unlisted' (non-discoverable) yet Featured cookie-theft extensions (~6M users) reached users despite being unsearchable; Google Ad Transparency results supplied by another researcher indicated the extensions were distributed via advertisements."
       - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
         url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
-        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-10-21"
         attribution: "250+ related listings across Edge Add-ons, Chrome Web Store and Mozilla Add-ons promoted through sponsored Bing and Google results to landing pages whose Add-to-browser button redirected to the official store listing; landing-page URLs carried ad-attribution parameters (msclkid, sid*) distinguishing ad-driven installs from direct store visits."
     references:

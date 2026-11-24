@@ -18,7 +18,7 @@ techniques:
     real_world_examples:
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "The StegoAd campaign (119 extensions, up to 2.6M installs) ran 10+ C2 domains with automatic failover and abused trusted public infrastructure — Cloudflare Workers for proxying and GitHub Pages for hosting telemetry beacons and reCAPTCHA gates — so command/telemetry traffic blended into normal-looking requests."
       - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"

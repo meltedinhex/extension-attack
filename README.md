@@ -2,7 +2,7 @@
 
 A MITRE ATT&CK–style taxonomy of **browser-extension tradecraft**, scoped to the extension execution environment. It mirrors ATT&CK's *tactics-as-columns, techniques-as-cells* model but is built for the browser-extension platform (Chromium, Gecko, WebKit).
 
-**[Explore the interactive matrix](https://meltedinhex.com/extension-attack/)** — select a technique for its details and individual page.
+**[Explore the interactive matrix](https://meltedinhex.com/extension-attack/)** — browse the native blog viewer and open technique details through `#EXT-*` links.
 
 **80 techniques across 10 tactics** — 47 `active` (with cited public examples) and 33 `proposed` (open for community contribution). The build requires at least one example record for each `active` technique; it does not verify that links resolve or substantiate the claims.
 
@@ -39,7 +39,7 @@ Outputs to `build/`:
 - `matrix.json` — the full corpus (machine-consumable).
 - `navigator-layer.json` — experimental Navigator-format overlay (score 2 = active, 1 = proposed). Its `EXT-*` IDs are not in MITRE's dataset; interoperability with a custom data source has not yet been verified.
 - `extension-attack-stix.json` — experimental STIX 2.0-style bundle (tactics, techniques, matrix); compatibility with STIX consumers and Navigator has not yet been verified.
-- `heatmap/index.html` — an interactive matrix; `heatmap/techniques/<ID>.html` are per-technique pages. GitHub Pages deploys the validated site on pushes to `main`.
+- `heatmap/index.html` — a standalone local matrix; `heatmap/techniques/<ID>.html` are local per-technique pages. The public matrix is a versioned snapshot rendered and deployed by the [Melted in Hex blog](https://github.com/meltedinhex/meltedinhex.github.io), not this repository's Pages service.
 
 The build **validates** every entry against the schema and fails on duplicate IDs or dangling `related` references.
 

@@ -72,7 +72,7 @@ techniques:
     real_world_examples:
       - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
         url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
-        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        publisher: "Microsoft Edge Extensions Security Team"
         date: "2026-06-16"
         attribution: "StegoAd used seven Google Analytics tracking IDs as covert campaign telemetry, monitoring activity at scale through trusted third-party infrastructure."
       - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"
