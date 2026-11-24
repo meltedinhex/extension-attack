@@ -1,0 +1,91 @@
+version: "1.0"
+# The ten tactic columns. ATT&CK names reused for familiarity; EXT prefixes namespace
+# the extension-scoped technique IDs. attack_shortname maps to Navigator tactic lanes.
+tactics:
+  - id: EXT-TA-01
+    name: Initial Access
+    prefix: INITACC
+    attack_shortname: initial-access
+    order: 1
+    description: >
+      How the extension first lands in the browser — store publication, sideload/dev-mode,
+      forked clone, ownership-transfer update, or enterprise-policy force-install.
+
+  - id: EXT-TA-02
+    name: Execution
+    prefix: EXEC
+    attack_shortname: execution
+    order: 2
+    description: >
+      Running attacker-controlled logic inside the extension context, content scripts,
+      offscreen documents, or the page's main world.
+
+  - id: EXT-TA-03
+    name: Persistence
+    prefix: PERS
+    attack_shortname: persistence
+    order: 3
+    description: >
+      Maintaining a foothold across sessions and updates — auto-update channels,
+      service-worker re-registration, policy force-install, native-messaging hosts.
+
+  - id: EXT-TA-04
+    name: Privilege/Scope Escalation
+    prefix: PRIVESC
+    attack_shortname: privilege-escalation
+    order: 4
+    description: >
+      Gaining broader reach than needed — permission widening on update, broad host
+      permissions, or exposing extension resources to the web.
+
+  - id: EXT-TA-05
+    name: Defense Evasion
+    prefix: DEFEV
+    attack_shortname: defense-evasion
+    order: 5
+    description: >
+      Avoiding review and detection — obfuscation/packing, geofenced/time-bombed
+      activation, server-gated payloads, DNR-based traffic hiding, disabling peers.
+
+  - id: EXT-TA-06
+    name: Credential Access
+    prefix: CRED
+    attack_shortname: credential-access
+    order: 6
+    description: >
+      Stealing authentication material — cookies/sessions, authed-page DOM, form and
+      keystroke capture, token observation.
+
+  - id: EXT-TA-07
+    name: Collection
+    prefix: COLL
+    attack_shortname: collection
+    order: 7
+    description: >
+      Gathering user data — browsing history, page content, screenshots and tab capture.
+
+  - id: EXT-TA-08
+    name: Command & Control
+    prefix: C2
+    attack_shortname: command-and-control
+    order: 8
+    description: >
+      Receiving instructions/config — remote config services, WebSocket C2, DNR
+      redirection, policy-delivered managed storage.
+
+  - id: EXT-TA-09
+    name: Exfiltration
+    prefix: EXFIL
+    attack_shortname: exfiltration
+    order: 9
+    description: >
+      Moving stolen data off-device — fetch/sendBeacon to C2, DNS exfiltration, image beacons.
+
+  - id: EXT-TA-10
+    name: Impact
+    prefix: IMPACT
+    attack_shortname: impact
+    order: 10
+    description: >
+      Monetization and user harm — search/new-tab hijack, affiliate/cookie-stuffing,
+      ad injection, residential-proxy node.

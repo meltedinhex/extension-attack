@@ -1,0 +1,148 @@
+# Tactic: Exfiltration — moving stolen data off-device.
+# Prefix EXT-EXFIL.
+techniques:
+  - id: EXT-EXFIL-001
+    name: HTTP Exfiltration (fetch / sendBeacon)
+    tactic: Exfiltration
+    status: active
+    description: >
+      Collected data is sent to operator infrastructure using fetch or sendBeacon from a
+      content script or the service worker.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch, navigator.sendBeacon]
+    manifest_fingerprint: ["fetch(", "sendBeacon("]
+    detection_ideas:
+      - "Network: browser egress carrying large/encoded payloads to non-allowlisted hosts; beaconing cadence."
+    related: [EXT-CRED-001, EXT-COLL-001, EXT-COLL-002]
+    mitre_attack_xref: ["T1176.001", "T1567"]
+    real_world_examples:
+      - title: "Kimsuky deploys TRANSLATEXT to target South Korean academia"
+        url: "https://www.zscaler.com/blogs/security-research/kimsuky-deploys-translatext-target-south-korean-academia"
+        publisher: "Zscaler ThreatLabz (Park)"
+        date: "2024-06-27"
+        attribution: "TRANSLATEXT exfiltrates captured credentials, cookies and screenshots to operator infrastructure; cited by MITRE ATT&CK T1176.001 (S1201)."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-EXFIL-002
+    name: DNS Exfiltration
+    tactic: Exfiltration
+    status: proposed
+    description: >
+      Data is encoded into DNS queries (for example long random labels or TXT lookups),
+      exfiltrating over a channel that egress proxies often overlook.
+    platforms: [chrome, edge, firefox]
+    apis: [dns.resolve, fetch]
+    permissions: [dns]
+    manifest_fingerprint: ["dns.resolve", "TXT"]
+    detection_ideas:
+      - "DNS: long high-entropy labels / excessive TXT queries originating from the browser process."
+    related: [EXT-C2-001]
+    mitre_attack_xref: ["T1176.001", "T1048"]
+
+  - id: EXT-EXFIL-003
+    name: Image-Beacon Exfiltration
+    tactic: Exfiltration
+    status: proposed
+    description: >
+      Data is encoded into the query string of an image/pixel request, exfiltrating via
+      simple GETs that resemble analytics beacons.
+    platforms: [chrome, edge, firefox, safari]
+    manifest_fingerprint: ["new Image(", ".src ="]
+    detection_ideas:
+      - "Network: image requests with large encoded query strings to non-analytics hosts."
+    related: [EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-EXFIL-004
+    name: Exfiltration via Trusted Analytics
+    tactic: Exfiltration
+    status: active
+    description: >
+      Collected data or campaign telemetry is funneled through legitimate analytics
+      services (Google Analytics, Yandex Metrika) so the egress blends into normally
+      allowlisted measurement traffic.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch, navigator.sendBeacon]
+    manifest_fingerprint: ["google-analytics.com", "mc.yandex.ru", "collect?v=", "tid="]
+    detection_ideas:
+      - "Network: analytics beacons carrying unusually large/encoded payloads, or the same tracking ID shared across many unrelated extensions/domains."
+    related: [EXT-EXFIL-001, EXT-COLL-001]
+    mitre_attack_xref: ["T1176.001", "T1567"]
+    real_world_examples:
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "StegoAd used seven Google Analytics tracking IDs as covert campaign telemetry, monitoring activity at scale through trusted third-party infrastructure."
+      - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"
+        url: "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+        publisher: "Socket Threat Research (Kush Pandya)"
+        date: "2026-08-11"
+        attribution: "Eight Yandex Metrika counters (with Webvisor session recording) partitioned 49 campaign domains; one counter spanning the storefront and extension-farm landing pages linked the infrastructure and tracked users."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+      - "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+
+  - id: EXT-EXFIL-005
+    name: WebRTC Data-Channel Exfiltration
+    tactic: Exfiltration
+    status: proposed
+    description: >
+      Data is pushed over a WebRTC data channel (peer connection via STUN/TURN), a path
+      that egress proxies and content filters frequently do not inspect or block.
+    platforms: [chrome, edge, firefox]
+    apis: [RTCPeerConnection, RTCDataChannel]
+    manifest_fingerprint: ["RTCPeerConnection", "createDataChannel", "stun:", "turn:"]
+    detection_ideas:
+      - "Network: unexpected STUN/TURN or peer traffic from an extension context without a user-facing RTC feature."
+    related: [EXT-EXFIL-001, EXT-C2-002]
+    mitre_attack_xref: ["T1176.001", "T1048"]
+
+  - id: EXT-EXFIL-006
+    name: Native-Messaging-Host Exfiltration
+    tactic: Exfiltration
+    status: proposed
+    description: >
+      The extension hands collected data to a native messaging host (local binary) that
+      exfiltrates from outside the browser, bypassing browser-level egress controls and
+      any network policy scoped to the browser process.
+    platforms: [chrome, edge, firefox]
+    apis: [runtime.sendNativeMessage, runtime.connectNative]
+    permissions: [nativeMessaging]
+    manifest_fingerprint: ["nativeMessaging", "connectNative", "sendNativeMessage"]
+    detection_ideas:
+      - "EDR: browser spawning a native host that then makes outbound connections; correlate extension data handoff with host egress."
+    related: [EXT-PERS-004, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001", "T1048"]
+
+  - id: EXT-EXFIL-007
+    name: Messaging / Cloud-API Dead-Drop Exfiltration
+    tactic: Exfiltration
+    status: proposed
+    description: >
+      Stolen data is posted to a legitimate messaging or cloud service (Telegram bot API,
+      Discord webhook, Google Drive/Sheets, pastebin) so egress goes to a widely
+      allowlisted, high-reputation host.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch]
+    manifest_fingerprint: ["api.telegram.org", "discord.com/api/webhooks", "pastebin", "sheets.googleapis"]
+    detection_ideas:
+      - "Network: extension POSTing to bot/webhook/cloud-doc endpoints with encoded payloads not tied to a user action."
+    related: [EXT-EXFIL-001, EXT-C2-001]
+    mitre_attack_xref: ["T1176.001", "T1567.002", "T1102"]
+
+  - id: EXT-EXFIL-008
+    name: WebSocket Exfiltration
+    tactic: Exfiltration
+    status: proposed
+    description: >
+      Collected data is streamed out over a persistent WebSocket connection rather than
+      discrete HTTP requests, giving a continuous, lower-signature channel.
+    platforms: [chrome, edge, firefox]
+    apis: [WebSocket]
+    manifest_fingerprint: ["new WebSocket(", "wss://"]
+    detection_ideas:
+      - "Network: long-lived WebSocket from an extension to a non-CDN host carrying outbound user data."
+    related: [EXT-C2-002, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001", "T1567"]

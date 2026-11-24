@@ -1,0 +1,201 @@
+# Tactic: Collection — gathering user data.
+# Prefix EXT-COLL.
+techniques:
+  - id: EXT-COLL-001
+    name: Browsing-History Capture
+    tactic: Collection
+    status: active
+    description: >
+      The extension reads the user's browsing history via the history API and transmits
+      it off-device, profiling the user's activity.
+    platforms: [chrome, edge, firefox]
+    apis: [history.search, history.getVisits]
+    permissions: [history]
+    manifest_fingerprint: ["history", "history.search", "history.getVisits"]
+    store_policy_violations:
+      cws: "Privacy: Limited Use"
+      amo: "§6 Data Collection"
+      edge: "§1.5 Personal information"
+    detection_ideas:
+      - "Behavioral: history read followed by egress to a host not previously seen and not on the store/update allowlist."
+    related: [EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Another cluster of potentially malicious Chrome extensions"
+        url: "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-06-08"
+        attribution: "The 'Adblock all advertisments' extension used a tabs.onUpdated listener to POST every address the user navigated to, along with a unique user ID, to a remote server disguised as a rule update."
+    references:
+      - "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+
+  - id: EXT-COLL-002
+    name: Page-Content Scraping
+    tactic: Collection
+    status: active
+    description: >
+      Content scripts or an offscreen DOM scrape harvest page content across sites —
+      message bodies, documents, financial data — and send it to an operator.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [scripting.executeScript, offscreen.createDocument]
+    permissions: ["<all_urls>"]
+    manifest_fingerprint: ["content_scripts", "DOM_SCRAPING", "innerText", "documentElement"]
+    store_policy_violations:
+      cws: "Limited Use; Use of Permissions"
+      amo: "§6 Data Collection"
+      edge: "§1.5 Personal information"
+    detection_ideas:
+      - "Behavioral: broad content-script scraping + periodic egress/beaconing."
+    related: [EXT-EXEC-004, EXT-CRED-002, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Sclpfybn Monetization Scheme"
+        url: "https://secureannex.com/blog/sclpfybn-moneitization-scheme"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-01-03"
+        attribution: "A tracking library embedded in extensions such as 'Reader Mode' ran in FULL_NAVIGATION mode, capturing visited URLs, headers, URL parameters and response codes across sensitive sites (Bank of America, American Express, Zoom, 23andMe) and exfiltrating them (LZString-compressed) to third-party domains."
+      - title: "Cyberhaven Extension Compromise"
+        url: "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2024-12-27"
+        attribution: "The malicious update injected a content script on <all_urls> at document_start that collected data from each page and messaged it to the background worker for exfiltration."
+    references:
+      - "https://secureannex.com/blog/sclpfybn-moneitization-scheme"
+      - "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+
+  - id: EXT-COLL-003
+    name: Screenshot / Tab Capture
+    tactic: Collection
+    status: active
+    description: >
+      The extension captures tab or screen content (captureVisibleTab, tabCapture,
+      desktopCapture / getDisplayMedia) to collect what the user is viewing.
+    platforms: [chrome, edge]
+    apis: [tabs.captureVisibleTab, tabCapture.capture, desktopCapture.chooseDesktopMedia]
+    permissions: [tabCapture, desktopCapture, "<all_urls>"]
+    manifest_fingerprint: ["captureVisibleTab", "getDisplayMedia", "desktopCapture"]
+    detection_ideas:
+      - "Inventory: capture APIs + egress; cadence of captured frames."
+    related: [EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001", "T1113"]
+    real_world_examples:
+      - title: "Kimsuky deploys TRANSLATEXT to target South Korean academia"
+        url: "https://www.zscaler.com/blogs/security-research/kimsuky-deploys-translatext-target-south-korean-academia"
+        publisher: "Zscaler ThreatLabz (Park)"
+        date: "2024-06-27"
+        attribution: "TRANSLATEXT captures browser screenshots (plus credentials/cookies) and exfiltrates them; cited by MITRE ATT&CK T1176.001 (S1201)."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-COLL-004
+    name: Proxy-Based Full-Traffic Interception (AitM)
+    tactic: Collection
+    status: active
+    description: >
+      The extension points the browser proxy at an attacker-controlled server (e.g. a
+      fixed SOCKS5 node with a loopback-only bypass list), placing the operator in an
+      adversary-in-the-middle position over every request the browser makes.
+    platforms: [chrome, edge, firefox]
+    scope_note: >
+      Distinct from EXT-IMPACT-004 (reselling the host as a proxy exit node): here the
+      victim's own traffic is routed through attacker infrastructure so it can be read.
+    apis: [proxy.settings.set]
+    permissions: [proxy]
+    manifest_fingerprint: ["proxy", "fixed_servers", "socks5", "1082", "bypassList"]
+    store_policy_violations:
+      cws: "Deceptive Behavior; Limited Use / Data Policy"
+      amo: "§7 Monetization; Data disclosure"
+      edge: "§2.8 Prohibited"
+    detection_ideas:
+      - "Inventory: proxy permission + chrome.proxy.settings.set to a fixed non-corporate host; alert on proxy config changes."
+      - "Network: browser traffic egressing to a single relay IP/SOCKS port across all destinations."
+    related: [EXT-IMPACT-004, EXT-CRED-004, EXT-CRED-001]
+    mitre_attack_xref: ["T1176.001", "T1557"]
+    real_world_examples:
+      - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"
+        url: "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+        publisher: "Socket Threat Research (Kush Pandya)"
+        date: "2026-08-11"
+        attribution: "520 of 522 analyzed VPN extensions set chrome.proxy.settings to a fixed SOCKS5 server on port 1082 with a loopback-only bypass list, forcing every browser request through the operator's node — positioned to read every destination, TLS SNI, source IP and any plaintext request body."
+    references:
+      - "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+
+  - id: EXT-COLL-005
+    name: AI Prompt / Chat Harvesting
+    tactic: Collection
+    status: active
+    description: >
+      A content script hooks the page's native fetch / XMLHttpRequest (or scrapes the
+      DOM) to capture the user's conversations with AI tools (ChatGPT, Claude, Gemini,
+      Perplexity) — prompts and responses — and exfiltrates them, often driven by remote
+      config.
+    platforms: [chrome, edge, firefox]
+    apis: [fetch, XMLHttpRequest]
+    permissions: [scripting, "<all_urls>"]
+    manifest_fingerprint: ["window.fetch =", "event-stream", "getReader", "chatgpt.com", "claude.ai"]
+    store_policy_violations:
+      cws: "Limited Use; Single Purpose; no remotely hosted code"
+      amo: "§1 No Surprises; Data disclosure"
+      edge: "§2.8 Prohibited"
+    detection_ideas:
+      - "Static: content script at document_start reassigning window.fetch / XMLHttpRequest and reading response streams on AI-tool origins."
+      - "Network: AI-chat content posted to an analytics/marketing host; remote config fetch driving capture targets."
+    related: [EXT-COLL-002, EXT-EXEC-003, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001", "T1119"]
+    real_world_examples:
+      - title: "Prompt poaching runs rampant in extensions"
+        url: "https://secureannex.com/blog/prompt-poaching"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-12-29"
+        attribution: "The Similarweb extension (1M+ users) hooks native fetch/XHR at document_start and, driven by remote config from rank.similarweb.com, intercepts streaming conversations from ChatGPT and Claude (fetch interception) and Gemini/Perplexity (DOM scraping), reconstructing full prompts and responses for exfiltration."
+    references:
+      - "https://secureannex.com/blog/prompt-poaching"
+
+  - id: EXT-COLL-006
+    name: Clipboard Capture
+    tactic: Collection
+    status: proposed
+    description: >
+      The extension reads clipboard contents (clipboardRead permission, or the async
+      Clipboard API in an injected context) to harvest copied passwords, crypto
+      addresses, OTP codes, or other sensitive data.
+    platforms: [chrome, edge, firefox]
+    apis: [navigator.clipboard.readText, document.execCommand]
+    permissions: [clipboardRead]
+    manifest_fingerprint: ["clipboardRead", "clipboard.readText", "paste"]
+    detection_ideas:
+      - "Inventory: clipboardRead permission; behavioral clipboard polling without a user paste action."
+    related: [EXT-CRED-005, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001", "T1115"]
+
+  - id: EXT-COLL-007
+    name: Geolocation Tracking
+    tactic: Collection
+    status: proposed
+    description: >
+      The extension collects precise or coarse location via the geolocation API or IP
+      geolocation lookups to profile or target the user.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [geolocation.getCurrentPosition, fetch]
+    permissions: [geolocation]
+    manifest_fingerprint: ["geolocation", "getCurrentPosition", "watchPosition"]
+    detection_ideas:
+      - "Inventory: geolocation permission or repeated IP-geo lookups paired with egress."
+    related: [EXT-COLL-001, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-COLL-008
+    name: Audio / Microphone Capture
+    tactic: Collection
+    status: proposed
+    description: >
+      The extension captures microphone audio or a tab's audio stream (getUserMedia /
+      tabCapture audio) to record the user or meeting content.
+    platforms: [chrome, edge]
+    apis: [getUserMedia, tabCapture.capture]
+    permissions: [tabCapture]
+    manifest_fingerprint: ["getUserMedia", "audio", "tabCapture"]
+    detection_ideas:
+      - "Inventory: media-capture APIs + egress; capture started without a user-facing recording feature."
+    related: [EXT-COLL-003, EXT-EXFIL-001]
+    mitre_attack_xref: ["T1176.001", "T1123"]

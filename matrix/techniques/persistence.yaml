@@ -1,0 +1,125 @@
+# Tactic: Persistence — maintaining a foothold across sessions and updates.
+# Prefix EXT-PERS.
+techniques:
+  - id: EXT-PERS-001
+    name: Self-Hosted Auto-Update Channel
+    tactic: Persistence
+    status: proposed
+    description: >
+      The extension declares an off-store update_url pointing at attacker infrastructure,
+      allowing silent delivery of new code via the auto-update mechanism without store
+      re-review.
+    platforms: [chrome, edge, firefox]
+    scope_note: >
+      Chromium update flow: update_url -> updates.xml (gupdate/Omaha), appid = public-key
+      hash, codebase = HTTPS .crx, new CRX signed with the same key. On Win/macOS this
+      only applies to policy-installed extensions. Safari cannot self-host.
+    apis: []
+    manifest_fingerprint: ["update_url"]
+    install_vectors: [update_trojan]
+    detection_ideas:
+      - "Flag update_url whose host is not clients2.google.com / edge.microsoft.com / addons.mozilla.org."
+      - "Network: browser update fetch to a non-store host."
+    related: [EXT-INITACC-002, EXT-INITACC-004]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-PERS-002
+    name: Service-Worker Keep-Alive / Re-Registration
+    tactic: Persistence
+    status: proposed
+    description: >
+      The MV3 service worker is kept alive or re-registers content scripts and alarms so
+      the extension reliably resumes activity after the worker is terminated.
+    platforms: [chrome, edge, firefox]
+    apis: [alarms.create, scripting.registerContentScripts, runtime.getContexts]
+    permissions: [alarms]
+    manifest_fingerprint: ["alarms", "registerContentScripts", "persistAcrossSessions"]
+    detection_ideas:
+      - "Inventory: persistent alarms + dynamic content-script registration with persistAcrossSessions."
+    related: [EXT-EXEC-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-PERS-003
+    name: Policy Force-Install Persistence
+    tactic: Persistence
+    status: active
+    description: >
+      A force-install policy keeps the extension installed and pinned; the user cannot
+      disable or remove it, persisting through profile resets and user action.
+    platforms: [chrome, edge, firefox, safari]
+    install_vectors: [policy_forcelist, mdm]
+    detection_ideas:
+      - "Registry/policies.json/MDM monitoring for force_installed entries; drift vs approved allowlist."
+    related: [EXT-INITACC-005]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "No Place Like Chrome"
+        url: "https://www.xorrior.com/No-Place-Like-Chrome/"
+        publisher: "Chris Ross (xorrior)"
+        date: "2019-02-08"
+        attribution: "Silent, persistent browser-extension install on macOS via configuration profiles; cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-PERS-004
+    name: Native-Messaging Host Bridge
+    tactic: Persistence
+    status: proposed
+    description: >
+      The extension connects to a native messaging host — an on-disk binary registered
+      via a host manifest — bridging the browser sandbox to the OS for persistent,
+      higher-privilege execution.
+    platforms: [chrome, edge, firefox, safari]
+    scope_note: >
+      Safari's analog routes messages to the signed, sandboxed containing app via app
+      groups rather than an arbitrary on-disk binary.
+    apis: [runtime.connectNative, runtime.sendNativeMessage]
+    permissions: [nativeMessaging]
+    manifest_fingerprint: ["nativeMessaging", "connectNative", "sendNativeMessage"]
+    detection_ideas:
+      - "EDR: browser process spawning a native-host binary from a user-writable path."
+      - "New native-host manifest JSON in user-writable dir + NativeMessagingUserLevelHosts enabled."
+    related: [EXT-EXEC-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-PERS-005
+    name: Config Re-Seed via Sync Storage
+    tactic: Persistence
+    status: proposed
+    description: >
+      The extension stores operator config / activation state in chrome.storage.sync so it
+      propagates across the user's signed-in profiles and is restored after reinstall or
+      on another device, surviving local cleanup.
+    platforms: [chrome, edge, firefox]
+    apis: [storage.sync]
+    manifest_fingerprint: ["storage", "chrome.storage.sync"]
+    detection_ideas:
+      - "Behavioral: extension re-activating with prior config after a clean reinstall; inventory storage.sync carrying activation flags."
+    related: [EXT-EXEC-003, EXT-C2-004]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-PERS-006
+    name: Cross-Extension Shared Identifier
+    tactic: Persistence
+    status: active
+    description: >
+      Sibling extensions from one operator answer each other's postMessage queries (for
+      example a get-ext-uid request on a shared page) so every family member reuses one
+      tracking ID. Activity is correlated across extensions, and removing one extension
+      does not clear the ID held by the others.
+    platforms: [chrome, edge, firefox]
+    apis: [window.postMessage, storage.local]
+    manifest_fingerprint: ["content_scripts", "get-ext-uid", "ext-uid"]
+    detection_ideas:
+      - "Static: content script with a window message listener that replies with a stored UID to any page-origin request."
+      - "Fleet: multiple installed extensions storing an identical UID value; treat the family as one unit when remediating."
+    related: [EXT-DEFEV-009, EXT-PERS-005]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
+        url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        date: "2026-10-21"
+        attribution: "A landing page sent get-ext-uid and reused the UID of any installed family member; 'Free Digital Books Online' stored the same UID as 'View Point 3D Earth' despite a different campaign and domain."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"

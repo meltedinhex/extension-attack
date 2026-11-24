@@ -1,0 +1,277 @@
+# Tactic: Initial Access — how the extension first lands in the browser.
+# Prefix EXT-INITACC. Schema: schema/technique.schema.json
+techniques:
+  - id: EXT-INITACC-001
+    name: Store-Published Trojan
+    tactic: Initial Access
+    status: active
+    description: >
+      A malicious extension is published to an official store with a clean-looking
+      listing and benign-appearing functionality, then abuses its granted
+      capabilities once installed by users.
+    platforms: [chrome, edge, firefox, safari]
+    install_vectors: [store]
+    manifest_fingerprint: ["permissions", "host_permissions"]
+    store_policy_violations:
+      cws: "Malicious and Prohibited Products"
+      amo: "§8 Security/Blocking; Acceptable Use"
+      edge: "§1.2.2 Unwanted and malicious software"
+    detection_ideas:
+      - "Store-side: listing/behavior mismatch; post-publish server-gated behavior."
+      - "Endpoint: installed store extension exhibiting capabilities beyond its stated purpose."
+    related: [EXT-DEFEV-003, EXT-PRIVESC-002]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Trends and Lessons from Three Years Fighting Malicious Extensions"
+        url: "https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/43824.pdf"
+        publisher: "Google (Jagpal et al.)"
+        date: "2015-08"
+        attribution: "Measurement study of malicious extensions distributed via the Chrome Web Store; cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-INITACC-002
+    name: Ownership-Transfer / Update Trojan
+    tactic: Initial Access
+    status: active
+    description: >
+      A previously benign, popular extension is sold or its developer account is
+      compromised; a subsequent auto-update introduces malicious code under the same
+      extension ID that users already trust.
+    platforms: [chrome, edge, firefox]
+    scope_note: >
+      The extension ID is derived from the signing public key, so an update keeps the
+      same ID while the code changes — users and allowlists see no ID change.
+    install_vectors: [update_trojan, ownership_transfer]
+    store_policy_violations:
+      cws: "Malicious and Prohibited Products; Enforcement Circumvention"
+      amo: "§8 Security/Blocking"
+      edge: "§1.2.4 Extension updates; §1.2.2"
+    detection_ideas:
+      - "Diff permissions/code across versions of the same ID; alert on sudden capability or egress changes after an update."
+      - "Watch for new network destinations appearing only after a version bump."
+    related: [EXT-PERS-001, EXT-PRIVESC-001]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Pixel Perfect: Sold Extension Injects Code Through Pixel"
+        url: "https://secureannex.com/blog/pixel-perfect"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "The Featured 'QuickLens' Google Lens extension (7,000 users) was listed for sale on ExtensionHub, changed ownership, and the new owner pushed a weaponized update turning it into a C2-driven remote-code-execution platform under the same ID."
+      - title: "Cyberhaven Extension Compromise"
+        url: "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2024-12-27"
+        attribution: "An OAuth phishing email tricked a Cyberhaven admin into granting chromewebstore access; the attacker pushed malicious v24.10.4 that auto-updated to users and exfiltrated sessions/cookies. The same campaign hit 20+ other extensions."
+      - title: "Buying browser extensions for fun and profit"
+        url: "https://annex.security/blog/buying-browser-extensions/"
+        publisher: "Secure Annex (John Tuckner)"
+        attribution: "The researcher arranged a transfer of the marketplace-listed Website Blocker extension; the developer ultimately transferred it without payment. The researcher published a demonstration redirect using existing permissions, with the same extension ID. Separately, the report describes a change of ownership and subsequent clickstream collection by 'Adblock for YouTube & Chrome - All Block'; it did not find evidence that sensitive headers were sent to the third party."
+    references:
+      - "https://annex.security/blog/buying-browser-extensions/"
+      - "https://secureannex.com/blog/pixel-perfect"
+      - "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+      # Pattern also noted publicly by AdGuard (popular extensions sold and converted to adware).
+      - "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+
+  - id: EXT-INITACC-003
+    name: Forked-Clone / Typosquat
+    tactic: Initial Access
+    status: active
+    description: >
+      An attacker copies a popular extension (name, icon, functionality) and republishes
+      it with an added malicious payload, relying on brand confusion for installs.
+    platforms: [chrome, edge, firefox]
+    scope_note: >
+      A clone signed with a different key gets a new extension ID even if code is copied;
+      detect by code/name/icon similarity, not ID.
+    install_vectors: [store]
+    store_policy_violations:
+      cws: "Impersonation & Intellectual Property"
+      amo: "§2 Content (forks must materially differ)"
+      edge: "§1.1.2 Accurate representation"
+    detection_ideas:
+      - "Similarity cluster listings by name/icon/code; flag near-duplicates with extra permissions or egress."
+    related: [EXT-INITACC-001]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Over 20,000,000 of Chrome Users are Victims of Fake Ad Blockers"
+        url: "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+        publisher: "AdGuard (Meshkov)"
+        date: "2018-04-17"
+        attribution: "Lazy clones of popular ad blockers (AdRemover, uBlock Plus, Adblock Pro, etc.) with added malicious code reached 20M+ users via the Chrome Web Store before takedown."
+    references:
+      - "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+
+  - id: EXT-INITACC-004
+    name: Sideload / Developer-Mode Load
+    tactic: Initial Access
+    status: active
+    description: >
+      An off-store extension is installed outside official review — unpacked via
+      developer mode, a dropped CRX (Linux manual), a signed XPI self-distribution, or
+      loosened install-source policy.
+    platforms: [chrome, edge, firefox]
+    scope_note: >
+      On Windows/macOS, Chromium self-hosted installs require enterprise policy; Linux
+      allows manual CRX. Firefox self-distributed XPIs must still be Mozilla-signed.
+      Safari has no sideload path beyond Xcode dev-install.
+    install_vectors: [sideload, dev_mode]
+    manifest_fingerprint: ["update_url"]
+    store_policy_violations:
+      cws: "Technical Requirements / off-store distribution constraints"
+      amo: "§3 Submission (signing required)"
+      edge: "§1.2 Security"
+    detection_ideas:
+      - "Monitor ExtensionInstallSources / ExtensionDeveloperModeSettings loosening on managed endpoints."
+      - "Detect unpacked extension directories appearing under the browser profile."
+    related: [EXT-INITACC-005]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Rilide - An Information Stealing Browser Extension"
+        url: "https://blog.pulsedive.com/rilide-an-information-stealing-browser-extension/"
+        publisher: "Pulsedive Threat Research"
+        date: "2025-03-21"
+        attribution: "Rilide silently loads by modifying Chromium Preferences / Secure Preferences files; cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://developer.chrome.com/docs/extensions/how-to/distribute"
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-INITACC-005
+    name: Force-Install via Enterprise Policy
+    tactic: Initial Access
+    status: active
+    description: >
+      An attacker (e.g. a bundled installer or registry-tampering malware) writes a
+      browser management policy that silently force-installs an extension the user
+      cannot remove, bypassing the store install prompt and data-collection consent.
+    platforms: [chrome, edge, firefox, safari]
+    scope_note: >
+      Google explicitly treats enterprise policies used outside one's own organization
+      as malware. Safari's analog is an MDM configuration profile.
+    install_vectors: [policy_forcelist, mdm]
+    manifest_fingerprint: ["update_url"]
+    detection_ideas:
+      - "Monitor ExtensionInstallForcelist / ExtensionSettings(force_installed) / policies.json for new IDs with non-store update_url."
+      - "Flag force-install changes made outside change control; inventory managed-extension drift."
+    related: [EXT-PERS-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "No Place Like Chrome"
+        url: "https://www.xorrior.com/No-Place-Like-Chrome/"
+        publisher: "Chris Ross (xorrior)"
+        date: "2019-02-08"
+        attribution: "Silent browser-extension install on macOS via configuration profiles (.mobileconfig); cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://chromeenterprise.google/policies/"
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-INITACC-006
+    name: Malvertising / Deceptive Distribution
+    tactic: Initial Access
+    status: active
+    description: >
+      Installs are driven by paid ads, SEO-poisoned pages, fake update/CAPTCHA prompts,
+      or bundled installers (PUP) rather than organic store discovery, pushing users to
+      an attacker-controlled (often unlisted) store listing.
+    platforms: [chrome, edge, firefox]
+    install_vectors: [malvertising, bundled_installer, social_engineering]
+    store_policy_violations:
+      cws: "Deceptive Installation Tactics"
+      amo: "§1 No Surprises; Acceptable Use"
+      edge: "§1.1.4 Deceptive install"
+    detection_ideas:
+      - "Correlate new extension installs with ad-click / fake-update referrers; flag unlisted listings reached only by direct URL."
+      - "Endpoint: extension install immediately preceded by a PUP/installer process."
+    related: [EXT-INITACC-001, EXT-DEFEV-003]
+    mitre_attack_xref: ["T1176.001", "T1204.001"]
+    real_world_examples:
+      - title: "Searching for something unknow"
+        url: "https://secureannex.com/blog/searching-for-something-unknow"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-04-10"
+        attribution: "50+ 'unlisted' (non-discoverable) yet Featured cookie-theft extensions (~6M users) reached users despite being unsearchable; Google Ad Transparency results supplied by another researcher indicated the extensions were distributed via advertisements."
+      - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
+        url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        date: "2026-10-21"
+        attribution: "250+ related listings across Edge Add-ons, Chrome Web Store and Mozilla Add-ons promoted through sponsored Bing and Google results to landing pages whose Add-to-browser button redirected to the official store listing; landing-page URLs carried ad-attribution parameters (msclkid, sid*) distinguishing ad-driven installs from direct store visits."
+    references:
+      - "https://secureannex.com/blog/searching-for-something-unknow"
+      - "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+
+  - id: EXT-INITACC-007
+    name: Developer-Account Compromise
+    tactic: Initial Access
+    status: active
+    description: >
+      An attacker phishes or steals a legitimate publisher's store/OAuth credentials and
+      pushes a malicious auto-update to the existing, trusted user base under the real
+      extension ID — no ownership change required.
+    platforms: [chrome, edge, firefox]
+    scope_note: >
+      Distinct from EXT-INITACC-002 (sale/transfer): here the original developer is still
+      the account holder but has lost control. The update ships to all current users.
+    install_vectors: [update_trojan, account_compromise]
+    store_policy_violations:
+      cws: "Malicious and Prohibited Products; 2SV required"
+      amo: "§8 Security/Blocking"
+      edge: "§1.2.4 Extension updates"
+    detection_ideas:
+      - "Alert on a trusted extension suddenly fetching new domains/config after an update not explained by changelog."
+      - "Monitor developer-account OAuth grants and publishing events for anomalies."
+    related: [EXT-INITACC-002, EXT-EXEC-003, EXT-CRED-001]
+    mitre_attack_xref: ["T1176.001", "T1195.001"]
+    real_world_examples:
+      - title: "Cyberhaven Extension Compromise"
+        url: "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2024-12-27"
+        attribution: "A targeted OAuth phishing email to a Cyberhaven admin granted the attacker Chrome Web Store publishing access; they shipped a malicious signed update to the live user base. 20+ other extensions were hit by the same campaign."
+    references:
+      - "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+
+  - id: EXT-INITACC-008
+    name: Bundled Third-Party SDK / Library Supply Chain
+    tactic: Initial Access
+    status: active
+    description: >
+      A legitimate extension integrates a monetization/analytics SDK (or a compromised
+      dependency) that silently adds data-collection, scraping, or traffic-relay
+      capability — often requiring no new user-visible permissions.
+    platforms: [chrome, edge, firefox]
+    install_vectors: [supply_chain, sdk_inclusion]
+    store_policy_violations:
+      cws: "Deceptive Behavior; Limited Use / Data Policy"
+      amo: "§7 Monetization; Data disclosure"
+      edge: "§2.8 Prohibited"
+    detection_ideas:
+      - "Flag known monetization-SDK markers (library names, lambda-url / request-broker hosts) across many unrelated extensions."
+      - "Diff a benign version against one that silently adds declarativeNetRequest/<all_urls> for an embedded SDK."
+    related: [EXT-IMPACT-004, EXT-C2-002, EXT-COLL-002]
+    mitre_attack_xref: ["T1176.001", "T1195.001"]
+    real_world_examples:
+      - title: "Mellow Drama: Turning Browsers Into Request Brokers"
+        url: "https://secureannex.com/blog/mellow-drama"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-07-07"
+        attribution: "The Mellowtel library — added by developers to ~45 Chrome, 129 Edge and 71 Firefox extensions (~1M users) as a 'share unused bandwidth' monetization SDK — turned the host extensions into a web-scraping/request-broker network, sometimes without adding any new permissions."
+    references:
+      - "https://secureannex.com/blog/mellow-drama"
+
+  - id: EXT-INITACC-009
+    name: Browser-Sync Install Propagation
+    tactic: Initial Access
+    status: proposed
+    description: >
+      A malicious extension installed on one device (or a compromised account) spreads to
+      the user's other devices through browser profile sync, widening the victim footprint
+      without further user action.
+    platforms: [chrome, edge, firefox]
+    apis: []
+    permissions: []
+    manifest_fingerprint: []
+    detection_ideas:
+      - "Inventory: the same extension ID appearing on multiple managed endpoints of one user shortly after first install; compare against sync policy (SyncDisabled / SyncTypesListDisabled)."
+    related: [EXT-INITACC-001, EXT-PERS-001]
+    mitre_attack_xref: ["T1176.001"]

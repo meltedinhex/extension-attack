@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://extension-attack.org/schema/tactics.schema.json",
+  "title": "Extension ATT&CK Tactics",
+  "type": "object",
+  "required": ["version", "tactics"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string" },
+    "tactics": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "prefix", "attack_shortname", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "prefix": {
+            "enum": ["INITACC", "EXEC", "PERS", "PRIVESC", "DEFEV", "CRED", "COLL", "C2", "EXFIL", "IMPACT"]
+          },
+          "attack_shortname": { "type": "string" },
+          "order": { "type": "integer" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

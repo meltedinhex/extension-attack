@@ -1,0 +1,22 @@
+# Licensing
+
+Copyright © 2026 Melted in Hex (meltedinhex.com). All rights reserved except as
+granted under the licenses below.
+
+Extension ATT&CK is dual-licensed by content type:
+
+- **Taxonomy / documentation** (everything under `matrix/`,
+  `.github/skills/`, and all Markdown): **Creative Commons Attribution 4.0 International
+  (CC-BY-4.0)**.
+  SPDX-License-Identifier: `CC-BY-4.0` — see [full license text](LICENSE-CC-BY-4.0.txt).
+
+- **Tooling / code** (everything under `tools/`, plus `schema/`): **Apache License 2.0**.
+  SPDX-License-Identifier: `Apache-2.0` — see [full license text](LICENSE-Apache-2.0.txt).
+
+When you contribute, you agree to license your contribution under the license that
+applies to the file type you are modifying (CC-BY-4.0 for taxonomy/docs, Apache-2.0
+for code).
+
+Portions of this project reference MITRE ATT&CK®. ATT&CK is © The MITRE Corporation;
+MITRE ATT&CK and ATT&CK are registered trademarks of The MITRE Corporation. This
+project is not affiliated with or endorsed by MITRE.

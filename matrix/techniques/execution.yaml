@@ -1,0 +1,215 @@
+# Tactic: Execution — running attacker-controlled logic in the extension environment.
+# Prefix EXT-EXEC.
+techniques:
+  - id: EXT-EXEC-001
+    name: Dynamic Script Injection
+    tactic: Execution
+    status: active
+    description: >
+      The extension injects JavaScript into pages at runtime via the scripting API or
+      dynamically registered content scripts, deciding what/where to run based on
+      remote or runtime signals. Running in the page's MAIN world escapes the isolated
+      world to reach page DOM, JS objects, and credentials.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [scripting.executeScript, scripting.registerContentScripts]
+    permissions: [scripting]
+    manifest_fingerprint: ["scripting", "executeScript", "\"world\":\"MAIN\"", "registerContentScripts"]
+    detection_ideas:
+      - "Inventory: scripting permission + broad host permissions; runtime injection into sensitive origins."
+    related: [EXT-CRED-002, EXT-DEFEV-003, EXT-EXEC-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Malicious code in PDF Toolbox extension"
+        url: "https://palant.info/2023/05/16/malicious-code-in-pdf-toolbox-extension/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-05-16"
+        attribution: "PDF Toolbox (2M+ users) hid obfuscated code that fetched a 'config' file from serasearchtop[.]com and used it to register a tabs.onUpdated listener calling chrome.tabs.executeScript, injecting attacker-supplied JavaScript into every page the user opened."
+      - title: "How malicious extensions hide running arbitrary code"
+        url: "https://palant.info/2023/06/02/how-malicious-extensions-hide-running-arbitrary-code/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-06-02"
+        attribution: "A cluster of eight MV3 extensions still in the Chrome Web Store (Soundboost, ~6.9M users) all held the 'scripting' permission and worked around the MV3 ban on remote code by using scripting.executeScript to load their own background.js into visited pages, driven by instructions fetched from tryimv3srvsts[.]com."
+    references:
+      - "https://palant.info/2023/05/16/malicious-code-in-pdf-toolbox-extension/"
+      - "https://palant.info/2023/06/02/how-malicious-extensions-hide-running-arbitrary-code/"
+
+  - id: EXT-EXEC-002
+    name: In-Package Dynamic Eval
+    tactic: Execution
+    status: active
+    description: >
+      The extension uses eval / new Function to execute code assembled at runtime from
+      packaged or remotely fetched strings, enabling logic that is not obvious from
+      static review.
+    platforms: [chrome, edge, firefox]
+    apis: [eval, Function]
+    manifest_fingerprint: ["eval(", "new Function("]
+    store_policy_violations:
+      cws: "Code Readability; MV3 no remotely hosted code"
+      amo: "§3 no obfuscation; §4 no remote code"
+      edge: "§1.1.7 Obfuscation; §1.2.1 CSP"
+    detection_ideas:
+      - "Static: eval/new Function combined with fetch of code-like payloads."
+    related: [EXT-EXEC-003, EXT-DEFEV-001]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Over 20,000,000 of Chrome Users are Victims of Fake Ad Blockers"
+        url: "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+        publisher: "AdGuard (Meshkov)"
+        date: "2018-04-17"
+        attribution: "Fake ad-blocker extensions hid a script inside a modified jQuery that base64-decoded (atob) and executed attacker-controlled code in the privileged background context."
+    references:
+      - "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+
+  - id: EXT-EXEC-003
+    name: Remote-Config-Driven Logic
+    tactic: Execution
+    status: active
+    description: >
+      All executable code ships in-package (as stores require), but behavior is gated by
+      remote configuration/feature flags fetched at runtime, letting the operator enable
+      malicious branches after review.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch, storage.managed]
+    detection_ideas:
+      - "Network: extension fetches config from gist/pastebin/sheets/raw hosts shortly before new egress patterns."
+    related: [EXT-DEFEV-003, EXT-C2-001, EXT-C2-004]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Over 20,000,000 of Chrome Users are Victims of Fake Ad Blockers"
+        url: "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+        publisher: "AdGuard (Meshkov)"
+        date: "2018-04-17"
+        attribution: "The fake ad blockers received commands from a remote command server (hidden inside an image) that were executed in the extension's privileged context, forming a browser botnet."
+      - title: "Stantinko: A massive adware campaign operating covertly since 2012"
+        url: "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+        publisher: "ESET (Vachon & Faou)"
+        date: "2017-07-20"
+        attribution: "Stantinko's Chrome extensions ('The Safe Surfing', 'Teddy Protection') looked benign but received a different configuration from the C&C to perform click fraud and ad injection; cited by MITRE ATT&CK T1176.001."
+      - title: "Pixel Perfect: Sold Extension Injects Code Through Pixel"
+        url: "https://secureannex.com/blog/pixel-perfect"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "The weaponized QuickLens update polled a C2 (api.extensionanalyticspro[.]top) every five minutes for an array of JavaScript strings stored as 'cached-agents-data' in local storage, then executed them at runtime on every page via a 1x1 GIF image onload handler \u2014 so the malicious code never appeared in the package source."
+      - title: "Cyberhaven Extension Compromise"
+        url: "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2024-12-27"
+        attribution: "The malicious content script fetched a configuration object from cyberhavenext[.]pro into local storage; that attacker-controlled config (target domains, selectors, exfil URL) drove which pages were harvested and where data was sent."
+    references:
+      - "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+      - "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+      - "https://secureannex.com/blog/pixel-perfect"
+      - "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+
+  - id: EXT-EXEC-004
+    name: Offscreen Document Execution
+    tactic: Execution
+    status: proposed
+    description: >
+      The extension creates a hidden offscreen document to run DOM-dependent work
+      (parsing, iframe scripting, scraping, blob/clipboard handling) off the service
+      worker and out of the user's view.
+    platforms: [chrome, edge]
+    scope_note: "Chrome 109+; Firefox has no offscreen API (uses background DOM); Safari differs."
+    apis: [offscreen.createDocument]
+    permissions: [offscreen]
+    manifest_fingerprint: ["offscreen", "DOM_SCRAPING", "IFRAME_SCRIPTING", "DOM_PARSER"]
+    detection_ideas:
+      - "Inventory: offscreen permission with DOM_SCRAPING/IFRAME_SCRIPTING reasons."
+    related: [EXT-COLL-002, EXT-DEFEV-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-EXEC-005
+    name: WASM Module Execution
+    tactic: Execution
+    status: proposed
+    description: >
+      Logic is compiled to a bundled WebAssembly module, hindering static review and
+      signature matching of the obfuscated behavior.
+    platforms: [chrome, edge, firefox, safari]
+    manifest_fingerprint: [".wasm", "WebAssembly.instantiate"]
+    detection_ideas:
+      - "Static: bundled .wasm combined with network egress and broad permissions."
+    related: [EXT-DEFEV-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-EXEC-006
+    name: Steganographic Payload Loading
+    tactic: Execution
+    status: active
+    description: >
+      Executable JavaScript is smuggled inside a non-code asset (an image or font shipped
+      in-package or fetched from C2), then extracted and executed at runtime, so static
+      scanners see only benign media.
+    platforms: [chrome, edge, firefox]
+    apis: [fetch, atob]
+    manifest_fingerprint: ["IEND", "atob(", ".woff2", "charCodeAt", "fromCharCode"]
+    store_policy_violations:
+      cws: "MV3 no remotely hosted code; Code Readability"
+      amo: "§3 no obfuscation; §4 no remote code"
+      edge: "§1.1.7 Obfuscation"
+    detection_ideas:
+      - "Static: image/font parsing combined with eval/Function/new Blob and data appended after a PNG IEND marker or in WOFF2 tables."
+      - "Behavioral: an image/font fetch immediately followed by code execution or new egress."
+    related: [EXT-DEFEV-001, EXT-EXEC-003, EXT-C2-001]
+    mitre_attack_xref: ["T1176.001", "T1027.003"]
+    real_world_examples:
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "StegoAd (119 extensions, up to 2.6M installs) hid executable JavaScript after the PNG IEND marker of its own icon, inside externally fetched PNG/WebP containers, and within bundled WOFF2 font files, then decoded it through layered case-swap/digit-swap/Base64/XOR transforms and executed it at runtime."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+
+  - id: EXT-EXEC-007
+    name: Debugger API (CDP) Abuse
+    tactic: Execution
+    status: proposed
+    description: >
+      The extension attaches to tabs via the chrome.debugger API (Chrome DevTools
+      Protocol) to evaluate script, read or modify page state, or capture input with
+      capabilities beyond ordinary content scripts.
+    platforms: [chrome, edge]
+    apis: [debugger.attach, debugger.sendCommand]
+    permissions: [debugger]
+    manifest_fingerprint: ["debugger", "Runtime.evaluate", "Page.navigate", "Input.dispatch"]
+    detection_ideas:
+      - "Inventory: debugger permission; runtime attach to tabs issuing Runtime.evaluate on sensitive origins."
+    related: [EXT-EXEC-001, EXT-CRED-002]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-EXEC-009
+    name: Cross-Extension Messaging Abuse
+    tactic: Execution
+    status: proposed
+    description: >
+      One extension drives another through runtime.sendMessage with an extension ID,
+      externally_connectable or onMessageExternal handlers, using a trusted extension's
+      privileges (or a loader/payload split across two extensions) to act.
+    platforms: [chrome, edge, firefox]
+    apis: [runtime.sendMessage, runtime.onMessageExternal, externally_connectable]
+    permissions: []
+    manifest_fingerprint: ["externally_connectable", "onMessageExternal", "sendMessage(\""]
+    detection_ideas:
+      - "Static: onMessageExternal handlers that execute scripts or perform privileged actions without verifying sender.id."
+    related: [EXT-PERS-006, EXT-EXEC-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-EXEC-008
+    name: userScripts API Execution
+    tactic: Execution
+    status: proposed
+    description: >
+      The extension uses the MV3 userScripts API to register and run arbitrary,
+      non-packaged scripts in page contexts — a sanctioned path that can execute code not
+      present in the reviewed package.
+    platforms: [chrome, edge]
+    apis: [userScripts.register, userScripts.configureWorld]
+    permissions: [userScripts]
+    manifest_fingerprint: ["userScripts", "configureWorld", "USER_SCRIPT"]
+    detection_ideas:
+      - "Inventory: userScripts permission; registered user scripts whose code is fetched or assembled at runtime."
+    related: [EXT-EXEC-001, EXT-EXEC-003]
+    mitre_attack_xref: ["T1176.001"]

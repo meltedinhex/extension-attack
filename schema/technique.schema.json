@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://extension-attack.org/schema/technique.schema.json",
+  "title": "Extension ATT&CK Technique",
+  "type": "object",
+  "required": ["id", "name", "tactic", "status", "description", "platforms", "detection_ideas"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^EXT-(INITACC|EXEC|PERS|PRIVESC|DEFEV|CRED|COLL|C2|EXFIL|IMPACT)-[0-9]{3}$"
+    },
+    "name": { "type": "string", "minLength": 3 },
+    "tactic": {
+      "enum": [
+        "Initial Access",
+        "Execution",
+        "Persistence",
+        "Privilege/Scope Escalation",
+        "Defense Evasion",
+        "Credential Access",
+        "Collection",
+        "Command & Control",
+        "Exfiltration",
+        "Impact"
+      ]
+    },
+    "status": { "enum": ["active", "proposed", "deprecated"] },
+    "description": { "type": "string", "minLength": 20 },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["chrome", "edge", "firefox", "safari"] }
+    },
+    "scope_note": { "type": "string" },
+    "apis": { "type": "array", "items": { "type": "string" } },
+    "permissions": { "type": "array", "items": { "type": "string" } },
+    "manifest_fingerprint": { "type": "array", "items": { "type": "string" } },
+    "install_vectors": {
+      "type": "array",
+      "items": {
+        "enum": ["store", "sideload", "policy_forcelist", "dev_mode", "update_trojan", "ownership_transfer", "mdm", "malvertising", "bundled_installer", "social_engineering", "account_compromise", "supply_chain", "sdk_inclusion"]
+      }
+    },
+    "store_policy_violations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cws": { "type": "string" },
+        "amo": { "type": "string" },
+        "edge": { "type": "string" }
+      }
+    },
+    "real_world_examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url"],
+        "additionalProperties": true,
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "publisher": { "type": "string" },
+          "date": { "type": "string" },
+          "attribution": { "type": "string" }
+        }
+      }
+    },
+    "detection_ideas": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "detection_rules": { "type": "array", "items": { "type": "string" } },
+    "extyara_rule": { "type": "string" },
+    "related": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^EXT-" }
+    },
+    "mitre_attack_xref": { "type": "array", "items": { "type": "string" } },
+    "references": { "type": "array", "items": { "type": "string" } }
+  }
+}

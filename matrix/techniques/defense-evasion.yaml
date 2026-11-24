@@ -1,0 +1,341 @@
+# Tactic: Defense Evasion — avoiding review and runtime detection.
+# Prefix EXT-DEFEV.
+techniques:
+  - id: EXT-DEFEV-001
+    name: Obfuscation / Packing
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Code is obfuscated, minified beyond readability, or compiled to WASM to hinder
+      store review and static signature matching of the malicious behavior.
+    platforms: [chrome, edge, firefox, safari]
+    manifest_fingerprint: [".wasm", "eval(", "new Function("]
+    store_policy_violations:
+      cws: "Code Readability Requirements"
+      amo: "§3 no obfuscated code"
+      edge: "§1.1.7 Obfuscation"
+    detection_ideas:
+      - "Static: high-entropy bundles, packer markers, or WASM paired with sensitive permissions."
+    related: [EXT-EXEC-002, EXT-EXEC-005]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Over 20,000,000 of Chrome Users are Victims of Fake Ad Blockers"
+        url: "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+        publisher: "AdGuard (Meshkov)"
+        date: "2018-04-17"
+        attribution: "Malicious logic was hidden inside a modified jQuery library and steganographically inside an image, base64-encoded and obfuscated to evade Chrome Web Store review."
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "StegoAd hid executable JavaScript via steganography — appended after the PNG IEND marker of the extension's own icon, inside externally fetched PNG/WebP containers, and even within WOFF2 font files — then decoded it through layered case-swap, digit-swap, Base64 and XOR transforms, so static scanners saw only benign image/font data."
+    references:
+      - "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+
+  - id: EXT-DEFEV-002
+    name: Geofenced / Time-Bombed Activation
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Malicious behavior activates only for targeted geographies, locales, or after a
+      delay, so reviewers and sandboxes see benign behavior.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [i18n.getUILanguage, fetch]
+    detection_ideas:
+      - "Behavioral: activation conditioned on geo/locale/time; divergent behavior across regions."
+    related: [EXT-DEFEV-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Pixel Perfect: Sold Extension Injects Code Through Pixel"
+        url: "https://secureannex.com/blog/pixel-perfect"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "On first run the malicious QuickLens update fingerprinted the user's country via Cloudflare's trace endpoint (1.1.1.1/cdn-cgi/trace) and reported it to the C2, enabling the operator to deliver geo-targeted payloads."
+      - title: "Sclpfybn Monetization Scheme"
+        url: "https://secureannex.com/blog/sclpfybn-moneitization-scheme"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-01-03"
+        attribution: "The 'Email Hunter' extension in the cluster was observed likely region-blocking the United States — an example of geo-conditioned behavior to evade scrutiny."
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "StegoAd extensions stayed silent for a 3–5 day time-gate to survive sandbox analysis, fired the payload only probabilistically, and detected whether DevTools was open — hiding indefinitely if an analyst was watching."
+    references:
+      - "https://secureannex.com/blog/pixel-perfect"
+      - "https://secureannex.com/blog/sclpfybn-moneitization-scheme"
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+
+  - id: EXT-DEFEV-003
+    name: Benign-at-Review, Server-Gated Payload
+    tactic: Defense Evasion
+    status: active
+    description: >
+      The extension behaves benignly during review, then enables the malicious code path
+      later via a remote switch, decoupling the observed-at-review behavior from
+      production behavior.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch, storage.managed]
+    store_policy_violations:
+      cws: "Misleading or Unexpected Behavior; MV3 no remote code"
+      amo: "§1 No Surprises; §4"
+      edge: "§1.2.1 CSP; §1.1 accurate representation"
+    detection_ideas:
+      - "Network: config fetch toggling behavior; new egress appearing post-install without an update."
+    related: [EXT-EXEC-003, EXT-C2-001]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Trends and Lessons from Three Years Fighting Malicious Extensions"
+        url: "https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/43824.pdf"
+        publisher: "Google (Jagpal et al.)"
+        date: "2015-08"
+        attribution: "Documents malicious extensions evading Chrome Web Store automated review; cited by MITRE ATT&CK T1176.001."
+      - title: "Another cluster of potentially malicious Chrome extensions"
+        url: "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-06-08"
+        attribution: "The Great Suspender's 'license check' returned a reassuring response on first download, then delivered the real (malicious redirect) configuration only a few hours later to evade review."
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "StegoAd's C2 performed server-side request validation — researchers probing the payload URLs directly received empty responses, so the malicious image payload was only served to genuine post-install victims that passed the operator's gating checks."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+      - "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+
+  - id: EXT-DEFEV-004
+    name: DNR-Based Traffic / Header Manipulation
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Declarative Net Request rules strip or alter request/response headers (for example
+      removing cookies or security headers) or redirect requests, hiding or reshaping C2
+      and data flows without content-level interception.
+    platforms: [chrome, edge, safari]
+    scope_note: "Firefox retains blocking webRequest; DNR behavior/limits differ."
+    apis: [declarativeNetRequest]
+    permissions: [declarativeNetRequest, declarativeNetRequestWithHostAccess]
+    manifest_fingerprint: ["declarative_net_request", "modifyHeaders", "regexSubstitution"]
+    detection_ideas:
+      - "Inventory: modifyHeaders/header-removal rules affecting auth hosts; corroborate with altered headers in proxy logs."
+    related: [EXT-C2-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Another cluster of potentially malicious Chrome extensions"
+        url: "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-06-08"
+        attribution: "Several extensions in the cluster abused webRequest/DNR to remove security headers such as Content-Security-Policy and X-Frame-Options and to alter Set-Cookie / User-Agent headers."
+      - title: "Pixel Perfect: Sold Extension Injects Code Through Pixel"
+        url: "https://secureannex.com/blog/pixel-perfect"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "The malicious QuickLens update shipped a rules.json using declarativeNetRequest to strip content-security-policy, x-frame-options, x-xss-protection and related headers from every response, enabling its pixel-onload remote code execution to run on any site."
+    references:
+      - "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+      - "https://secureannex.com/blog/pixel-perfect"
+
+  - id: EXT-DEFEV-005
+    name: Disable / Inventory Peer Extensions
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Using the management API, the extension enumerates or disables other installed
+      extensions (for example security or ad-blocking tooling) to reduce friction or
+      visibility.
+    platforms: [chrome, edge, firefox]
+    apis: [management.getAll, management.setEnabled]
+    permissions: [management]
+    manifest_fingerprint: ["management", "setEnabled", "getAll"]
+    detection_ideas:
+      - "Runtime: extension calling management.setEnabled(false) on security extensions."
+    related: []
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Widespread malware campaign seeks to silently inject ads into search results, affects multiple browsers"
+        url: "https://www.microsoft.com/en-us/security/blog/2020/12/10/widespread-malware-campaign-seeks-to-silently-inject-ads-into-search-results-affects-multiple-browsers/"
+        publisher: "Microsoft Threat Intelligence"
+        date: "2020-12-10"
+        attribution: "Adrozek modifies browser security controls/settings to persist and evade; cited by MITRE ATT&CK T1176.001."
+      - title: "TA413 Leverages New FriarFox Browser Extension to Target the Gmail Accounts of Global Tibetan Organizations"
+        url: "https://www.proofpoint.com/uk/blog/threat-insight/ta413-leverages-new-friarfox-browser-extension-target-gmail-accounts-global"
+        publisher: "Proofpoint (Raggi)"
+        date: "2021-02-25"
+        attribution: "FriarFox modifies browser permissions/privacy settings; cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+
+  - id: EXT-DEFEV-006
+    name: Store Reputation / Review Manipulation
+    tactic: Defense Evasion
+    status: active
+    description: >
+      The operator games store trust signals — fake or coordinated reviews, inflated
+      install counts, reused boilerplate privacy justifications, or unlisted-yet-Featured
+      listings — so a malicious extension appears reputable and clears review.
+    platforms: [chrome, edge, firefox]
+    store_policy_violations:
+      cws: "Spam and Abuse; Enforcement Circumvention; Review manipulation"
+      amo: "§1 No Surprises; Ratings abuse"
+      edge: "§1.1.2 Accurate representation"
+    detection_ideas:
+      - "Cluster listings sharing byte-identical privacy-justification text / review bursts / developer metadata across accounts."
+      - "Flag extensions that are both 'unlisted' (non-searchable) and 'Featured'."
+    related: [EXT-INITACC-003, EXT-INITACC-006, EXT-DEFEV-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"
+        url: "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+        publisher: "Socket Threat Research (Kush Pandya)"
+        date: "2026-08-11"
+        attribution: "Across this campaign, 9 extensions from separate publisher accounts shipped byte-identical (same SHA-256) PRIVACY_JUSTIFICATIONS.md asserting 'No data transmitted to external servers' while shipping a proxy; impersonated brands carried fabricated 5-star reviews to appear legitimate."
+      - title: "Searching for something unknow"
+        url: "https://secureannex.com/blog/searching-for-something-unknow"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-04-10"
+        attribution: "The cookie-theft extensions were simultaneously 'unlisted' (not indexed or searchable) yet 'Featured' in the Chrome Web Store — a trust signal that makes a non-discoverable extension look vetted and reputable."
+    references:
+      - "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+      - "https://secureannex.com/blog/searching-for-something-unknow"
+
+  - id: EXT-DEFEV-007
+    name: Anti-Analysis / Sandbox & DevTools Detection
+    tactic: Defense Evasion
+    status: active
+    description: >
+      The extension detects analysis conditions — DevTools open, sandbox/VM, direct
+      researcher requests — and suppresses or alters behavior, while the C2 withholds the
+      payload unless server-side checks pass.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch]
+    manifest_fingerprint: ["devtools", "debugger", "console.clear"]
+    detection_ideas:
+      - "Behavioral: logic branching on DevTools/sandbox signals; a C2 that returns empty/benign responses to direct probing but serves payloads to real installs."
+    related: [EXT-DEFEV-002, EXT-DEFEV-003, EXT-EXEC-006]
+    mitre_attack_xref: ["T1176.001", "T1497"]
+    real_world_examples:
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "StegoAd stayed silent for a 3–5 day time-gate to survive sandbox analysis, detected whether DevTools was open and hid indefinitely if so, and its C2 performed server-side request validation — serving empty responses to researchers probing payload URLs directly."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+
+  - id: EXT-DEFEV-008
+    name: Polymorphic Per-Build Code Generation
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Each published build is regenerated with different variable/function names,
+      comments, and literals so every logically identical file has a unique hash,
+      defeating hash- and string-based detection and cross-extension clustering.
+    platforms: [chrome, edge, firefox]
+    detection_ideas:
+      - "Cluster by normalized code skeleton (strip names/strings/whitespace) rather than file hash or extension ID to catch per-build regenerated variants."
+    related: [EXT-DEFEV-001, EXT-INITACC-003]
+    mitre_attack_xref: ["T1176.001", "T1027"]
+    real_world_examples:
+      - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"
+        url: "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+        publisher: "Socket Threat Research (Kush Pandya)"
+        date: "2026-08-11"
+        attribution: "Normalizing every live service worker into a code skeleton (names, strings, numbers and whitespace removed) produced 93 distinct skeletons across 409 live workers; the campaign regenerates variable names, function names and comments per build, producing a unique file hash for every logically identical file."
+    references:
+      - "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+
+  - id: EXT-DEFEV-009
+    name: Install-Source (Ad-Gated) Activation
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Malicious behavior is enabled only for installs that arrived through an attacker's
+      ad funnel. The landing page stores an activation ticket (e.g. in localStorage on the
+      campaign domain); after install the extension opens that domain, its content script
+      copies the ticket into extension storage, and the C2 workflow runs only when a valid
+      ticket exists. Direct store installs - including reviewer and sandbox installs - get
+      only the advertised utility, so the same store listing behaves differently by path.
+    platforms: [chrome, edge, firefox]
+    apis: [storage.local, runtime.sendMessage, tabs.create]
+    manifest_fingerprint: ["content_scripts", "storage", "alarms"]
+    scope_note: >
+      Distinct from EXT-DEFEV-003 (server-gated after install) and EXT-DEFEV-002
+      (geo/time gating): the gate is the acquisition channel, carried as data from the
+      landing page rather than shipped in the reviewed package.
+    detection_ideas:
+      - "Static: content script that reads window.localStorage on a first-party domain and relays the value to chrome.storage, with C2 calls guarded by that value."
+      - "Differential analysis: install the same listing via a direct store visit and via the ad/landing-page path; diff network egress and tab creation."
+      - "Network: extension service worker POSTs page URL/title to a host only after a post-install visit to an ad landing domain."
+    related: [EXT-DEFEV-003, EXT-DEFEV-002, EXT-INITACC-006, EXT-EXEC-003]
+    mitre_attack_xref: ["T1176.001", "T1480"]
+    real_world_examples:
+      - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
+        url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        date: "2026-10-21"
+        attribution: "Direct store installs lacked the activation ticket and never contacted C2; ad-funnel installs copied the ticket from the landing domain's localStorage into extension storage, enabling URL/title reporting, ad injection and affiliate redirects. Builds shipped with a server-side enable flag off."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+
+  - id: EXT-DEFEV-011
+    name: Security-Extension Tampering via Management API
+    tactic: Defense Evasion
+    status: proposed
+    description: >
+      An extension holding the management permission enumerates other installed extensions
+      and disables or uninstalls security, ad-blocking or competing extensions that would
+      expose or block its behavior.
+    platforms: [chrome, edge]
+    apis: [management.getAll, management.setEnabled, management.uninstall]
+    permissions: [management]
+    manifest_fingerprint: ["management.setEnabled", "management.uninstall", "management.getAll"]
+    detection_ideas:
+      - "Static: management permission combined with setEnabled(false)/uninstall calls targeting non-self IDs."
+      - "Runtime: unexpected disable events for security extensions shortly after a new install or update."
+    related: [EXT-DEFEV-006, EXT-PERS-001]
+    mitre_attack_xref: ["T1176.001", "T1562.001"]
+
+  - id: EXT-DEFEV-012
+    name: Anti-Removal and Extension-Page Blocking
+    tactic: Defense Evasion
+    status: proposed
+    description: >
+      The extension makes removal difficult: closing or redirecting tabs that open the
+      browser's extension-management page, spamming the user, or reinstalling itself, so
+      the victim cannot easily uninstall it.
+    platforms: [chrome, edge, firefox]
+    apis: [tabs.onUpdated, tabs.remove, webNavigation]
+    permissions: [tabs]
+    manifest_fingerprint: ["chrome://extensions", "edge://extensions", "about:addons", "tabs.remove"]
+    detection_ideas:
+      - "Static: listeners that match browser-internal extension-management URLs and close or redirect the tab."
+    related: [EXT-PERS-001, EXT-DEFEV-011]
+    mitre_attack_xref: ["T1176.001", "T1562"]
+
+  - id: EXT-DEFEV-010
+    name: Shadow-DOM Overlay and Injection Exclusion List
+    tactic: Defense Evasion
+    status: active
+    description: >
+      Injected ads or overlays render inside a closed/open shadow root at a high stacking
+      order so page scripts and many ad blockers cannot see them, while a server-maintained
+      exclusion list suppresses injection on high-trust sites (AI assistants, healthcare,
+      tax, account pages) where an unexpected overlay would be noticed and reported.
+    platforms: [chrome, edge, firefox]
+    apis: [Element.attachShadow, storage.local]
+    manifest_fingerprint: ["content_scripts", "attachShadow"]
+    detection_ideas:
+      - "Static: content script calling attachShadow and appending a fixed, max-z-index host element to document.documentElement."
+      - "Behavioral: overlay injection that is absent on a curated set of sensitive domains and controlled by a remote configuration list."
+    related: [EXT-IMPACT-003, EXT-DEFEV-003]
+    real_world_examples:
+      - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
+        url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        date: "2026-10-21"
+        attribution: "Injected content rendered in a high-stacking shadow root hidden from page scripts and many ad blockers; a server-maintained list excluded AI assistants, healthcare/genetic-data portals, tax software, account pages and high-trust brands. Disabling 'Sponsored content' stopped visible ads but not URL/title reporting."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"

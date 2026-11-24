@@ -1,0 +1,29 @@
+# Generated build artifacts
+build/
+
+# Local-only drafts (blog posts, notes) — not part of the project
+drafts/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Analysis samples — never commit live malware packages
+samples/
+*.crx
+*.xpi
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Detection pack is local-only for now (framework is the focus)
+detections/
+
+# Signature pack is local-only for now
+rules/

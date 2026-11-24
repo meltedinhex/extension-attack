@@ -1,0 +1,134 @@
+# Tactic: Command & Control — receiving instructions/config.
+# Prefix EXT-C2.
+techniques:
+  - id: EXT-C2-001
+    name: Remote Config via Public Services
+    tactic: Command & Control
+    status: active
+    description: >
+      The extension pulls operator instructions or feature flags from benign-looking
+      public services (Google Sheets, pastebin, gists, GitHub Pages, DNS TXT records), blending C2 into
+      normal-looking traffic.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch, dns.resolve]
+    detection_ideas:
+      - "Network: periodic fetches to gist/pastebin/sheets/raw hosts or anomalous DNS TXT lookups from the browser."
+    related: [EXT-EXEC-003, EXT-DEFEV-003]
+    mitre_attack_xref: ["T1176.001", "T1102"]
+    real_world_examples:
+      - title: "Inside StegoAd: How We Disrupted a Massive Malicious Extension Campaign"
+        url: "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+        publisher: "Microsoft Edge Security / Browser Vulnerability Research"
+        date: "2026-06-16"
+        attribution: "The StegoAd campaign (119 extensions, up to 2.6M installs) ran 10+ C2 domains with automatic failover and abused trusted public infrastructure — Cloudflare Workers for proxying and GitHub Pages for hosting telemetry beacons and reCAPTCHA gates — so command/telemetry traffic blended into normal-looking requests."
+      - title: "737 Chrome VPN Extensions Linked to Brand Impersonation and Browser Traffic Redirection"
+        url: "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+        publisher: "Socket Threat Research (Kush Pandya)"
+        date: "2026-08-11"
+        attribution: "66 extensions in this VPN-impersonation campaign issued a HEAD request with redirect:'manual', read the 3xx Location header themselves to discover whichever operator domain was currently live, then fetched /config/links.json from it — relocating C2 for already-installed copies without shipping an update."
+    references:
+      - "https://microsoftedge.github.io/edgevr/posts/Inside-StegoAd-How-We-Disrupted-a-Massive-Malicious-Extension-Campaign/"
+      - "https://socket.dev/blog/chrome-vpn-extension-impersonation"
+
+  - id: EXT-C2-002
+    name: WebSocket C2 from Service Worker
+    tactic: Command & Control
+    status: active
+    description: >
+      A persistent WebSocket connection from the extension service worker provides a
+      live command channel to operator infrastructure.
+    platforms: [chrome, edge, firefox]
+    apis: [WebSocket]
+    manifest_fingerprint: ["new WebSocket(", "service_worker"]
+    detection_ideas:
+      - "Network: persistent WebSocket upgrade from browser to a non-CDN host."
+    related: [EXT-EXFIL-001, EXT-IMPACT-004]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Mellow Drama: Turning Browsers Into Request Brokers"
+        url: "https://secureannex.com/blog/mellow-drama"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-07-07"
+        attribution: "Extensions bundling the Mellowtel library open a WebSocket channel from the service worker to an AWS Lambda endpoint, send device info and heartbeats, then receive target URLs to fetch — a live operator-controlled command channel over WebSocket."
+      - title: "DePIN comes to browser extensions"
+        url: "https://secureannex.com/blog/depin-browser-extensions"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-09-01"
+        attribution: "DePIN 'bandwidth-sharing' extensions (Grass/Wynd Labs, Nodepay, Gradient, DAWN) create a WebSocket connection from the background service worker back to a server and wait for instructions (URLs to request), returning the scraped data over the same channel."
+    references:
+      - "https://secureannex.com/blog/mellow-drama"
+      - "https://secureannex.com/blog/depin-browser-extensions"
+
+  - id: EXT-C2-003
+    name: DNR-Based Redirection Channel
+    tactic: Command & Control
+    status: proposed
+    description: >
+      Declarative Net Request redirect rules reroute requests to operator-controlled
+      endpoints, using the browser's own rule engine as a covert channel.
+    platforms: [chrome, edge, safari]
+    apis: [declarativeNetRequest]
+    permissions: [declarativeNetRequest]
+    manifest_fingerprint: ["declarative_net_request", "redirect", "regexSubstitution"]
+    detection_ideas:
+      - "Inventory: redirect rules sending traffic to attacker hosts."
+    related: [EXT-DEFEV-004]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-C2-004
+    name: Managed-Storage Config Delivery
+    tactic: Command & Control
+    status: proposed
+    description: >
+      The operator (or an abused enterprise-policy path) delivers runtime configuration
+      through managed storage (storage.managed / 3rdparty Extensions policy), controlling
+      the extension without network C2.
+    platforms: [chrome, edge, firefox]
+    apis: [storage.managed]
+    manifest_fingerprint: ["storage", "chrome.storage.managed"]
+    detection_ideas:
+      - "Policy monitoring: changes to 3rdparty>Extensions / Managed Extension Settings delivering instructions."
+    related: [EXT-EXEC-003, EXT-INITACC-005]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-C2-005
+    name: Push-Notification (Web Push) C2
+    tactic: Command & Control
+    status: active
+    description: >
+      The extension subscribes to Web Push from an operator domain and treats incoming
+      push messages as the command channel, letting the operator selectively trigger
+      behavior (per-victim, per-region, or on-demand) without polling.
+    platforms: [chrome, edge, firefox]
+    apis: [PushManager.subscribe, pushManager, alarms.onAlarm]
+    permissions: [notifications]
+    manifest_fingerprint: ["pushManager", "applicationServerKey", "/subscribe", "onAlarm"]
+    detection_ideas:
+      - "Inventory: extension registering Web Push against a non-mainstream domain; behavior gated on push payload values."
+      - "Network: push-subscription POST to an attacker /subscribe endpoint."
+    related: [EXT-DEFEV-002, EXT-IMPACT-005]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Promise Bomb crashes browsers to install malware"
+        url: "https://secureannex.com/blog/promise-bomb"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "CrashFix variants (Pixel Shield, PageGuard) subscribe to Web Push from pixel-defence[.]com / page-guard[.]com; the destructive payload fires only when the C2 pushes a 'newVersion' value ending in '2', giving the operator selective per-victim remote control."
+    references:
+      - "https://secureannex.com/blog/promise-bomb"
+
+  - id: EXT-C2-006
+    name: Blockchain / Dead-Drop Resolver C2
+    tactic: Command & Control
+    status: proposed
+    description: >
+      The extension resolves its live C2 endpoint or payload from a resilient public
+      source — a blockchain smart contract/transaction, or a dead drop in a social-media
+      profile, gist, or pastebin — making takedown and blocklisting difficult.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [fetch]
+    manifest_fingerprint: ["eth_call", "smart contract", "api.github.com/gists", "pastebin"]
+    detection_ideas:
+      - "Network: extension querying blockchain RPC or public profile pages to derive a subsequent C2 host (dead-drop resolver pattern)."
+    related: [EXT-C2-001, EXT-DEFEV-003]
+    mitre_attack_xref: ["T1176.001", "T1102.001", "T1568.002"]

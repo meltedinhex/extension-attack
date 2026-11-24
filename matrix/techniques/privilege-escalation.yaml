@@ -1,0 +1,95 @@
+# Tactic: Privilege/Scope Escalation — gaining broader reach than needed.
+# Prefix EXT-PRIVESC.
+techniques:
+  - id: EXT-PRIVESC-001
+    name: Permission Widening on Update
+    tactic: Privilege/Scope Escalation
+    status: active
+    description: >
+      An update adds high-risk permissions or host permissions beyond the extension's
+      original scope, expanding capability after the extension has already earned user
+      and allowlist trust.
+    platforms: [chrome, edge, firefox]
+    manifest_fingerprint: ["permissions", "host_permissions"]
+    install_vectors: [update_trojan]
+    store_policy_violations:
+      cws: "Use of Permissions"
+      amo: "§4.1 only necessary permissions"
+      edge: "§1.6 Permissions"
+    detection_ideas:
+      - "Diff permissions/host_permissions across versions of the same ID; alert on new <all_urls>, cookies, nativeMessaging, debugger, management, proxy."
+    related: [EXT-INITACC-002, EXT-PRIVESC-002]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Pixel Perfect: Sold Extension Injects Code Through Pixel"
+        url: "https://secureannex.com/blog/pixel-perfect"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "After the QuickLens extension changed hands, the malicious v5.8 update added the declarativeNetRequestWithHostAccess and webRequest permissions (behind a single update permission prompt) to enable header stripping and C2 monitoring."
+      - title: "Cyberhaven Extension Compromise"
+        url: "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2024-12-27"
+        attribution: "The 'AI Assistant' variant deliberately avoided adding the cookies permission on update — using webRequest instead — precisely because adding it would have triggered a user permission prompt, illustrating how attackers manage update-time permission changes."
+    references:
+      - "https://secureannex.com/blog/pixel-perfect"
+      - "https://secureannex.com/blog/cyberhaven-extension-compromise/"
+
+  - id: EXT-PRIVESC-002
+    name: Broad Host Permissions
+    tactic: Privilege/Scope Escalation
+    status: active
+    description: >
+      The extension requests <all_urls> or wildcard host permissions far beyond its
+      stated purpose, enabling content-script injection and data access across every site.
+    platforms: [chrome, edge, firefox, safari]
+    permissions: ["<all_urls>"]
+    manifest_fingerprint: ["<all_urls>", "*://*/*", "host_permissions"]
+    store_policy_violations:
+      cws: "Use of Permissions / single purpose"
+      amo: "§1 No Surprises; §4.1"
+      edge: "§1.1.1 Single purpose; §1.6"
+    detection_ideas:
+      - "Inventory: broad host permissions disproportionate to stated function."
+    related: [EXT-CRED-002, EXT-COLL-002]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Another cluster of potentially malicious Chrome extensions"
+        url: "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-06-08"
+        attribution: "Across a cluster of 109 extensions, 102 requested access to all websites — far beyond their stated function — to enable affiliate fraud, browsing-profile building, and code injection."
+    references:
+      - "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+
+  - id: EXT-PRIVESC-003
+    name: Web-Accessible Resource / External Bridge Exposure
+    tactic: Privilege/Scope Escalation
+    status: proposed
+    description: >
+      The extension exposes resources to web pages via web_accessible_resources or opens
+      an extension<->web channel via externally_connectable, creating a bridge that web
+      content can use to reach extension capabilities.
+    platforms: [chrome, edge, firefox]
+    apis: [runtime.onMessageExternal]
+    manifest_fingerprint: ["web_accessible_resources", "externally_connectable", "onMessageExternal"]
+    detection_ideas:
+      - "Inventory: broad web_accessible_resources matches or permissive externally_connectable matches."
+    related: [EXT-C2-001]
+    mitre_attack_xref: ["T1176.001"]
+
+  - id: EXT-PRIVESC-004
+    name: Optional-Permission Runtime Escalation
+    tactic: Privilege/Scope Escalation
+    status: proposed
+    description: >
+      The extension ships a minimal reviewed permission set, then requests additional
+      optional_permissions or optional_host_permissions at runtime via permissions.request,
+      widening scope after install — often behind an innocuous prompt.
+    platforms: [chrome, edge, firefox]
+    apis: [permissions.request, permissions.contains]
+    manifest_fingerprint: ["optional_permissions", "optional_host_permissions", "permissions.request"]
+    detection_ideas:
+      - "Behavioral: runtime permissions.request granting broad host access well after install; diff effective vs. manifest-declared permissions."
+    related: [EXT-PRIVESC-001, EXT-PRIVESC-002]
+    mitre_attack_xref: ["T1176.001"]

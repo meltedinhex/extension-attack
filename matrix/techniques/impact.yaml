@@ -1,0 +1,267 @@
+# Tactic: Impact — monetization and user harm.
+# Prefix EXT-IMPACT.
+techniques:
+  - id: EXT-IMPACT-001
+    name: Search Hijack
+    tactic: Impact
+    status: active
+    description: >
+      The extension overrides the default search provider (or redirects search traffic)
+      to monetize queries or route users to attacker-chosen results.
+    platforms: [chrome, edge, firefox]
+    manifest_fingerprint: ["chrome_settings_overrides", "search_provider"]
+    store_policy_violations:
+      cws: "Misleading or Unexpected Behavior"
+      amo: "§1 No Surprises"
+      edge: "§1.1.8 Altering browser settings"
+    detection_ideas:
+      - "Inventory: chrome_settings_overrides.search_provider set by a non-approved extension."
+    related: [EXT-IMPACT-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "macOS Bundlore: Mac Virus Bypassing macOS Security Features"
+        url: "https://mackeeper.com/blog/post/610-macos-bundlore-adware-analysis/"
+        publisher: "MacKeeper (Sushko)"
+        date: "2019-04-17"
+        attribution: "Bundlore installs malicious browser extensions to hijack user searches; cited by MITRE ATT&CK T1176.001 (S0482)."
+      - title: "Widespread malware campaign seeks to silently inject ads into search results, affects multiple browsers"
+        url: "https://www.microsoft.com/en-us/security/blog/2020/12/10/widespread-malware-campaign-seeks-to-silently-inject-ads-into-search-results-affects-multiple-browsers/"
+        publisher: "Microsoft Threat Intelligence"
+        date: "2020-12-10"
+        attribution: "Adrozek tampers with browser settings and search results across Chrome, Edge, Firefox and Yandex; cited by MITRE ATT&CK T1176.001."
+      - title: "Stantinko: A massive adware campaign operating covertly since 2012"
+        url: "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+        publisher: "ESET (Vachon & Faou)"
+        date: "2017-07-20"
+        attribution: "Stantinko's Chrome extensions redirected search traffic (e.g. on the Rambler search engine) for click fraud; cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+      - "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+
+  - id: EXT-IMPACT-002
+    name: Affiliate / Cookie-Stuffing
+    tactic: Impact
+    status: active
+    description: >
+      The extension injects affiliate tags or drops affiliate cookies for sites the user
+      visits so the operator earns commissions on purchases the user would make anyway.
+    platforms: [chrome, edge, firefox]
+    apis: [declarativeNetRequest, cookies.set]
+    manifest_fingerprint: ["cookies.set", "affiliate", "ref="]
+    store_policy_violations:
+      cws: "Affiliate Ads"
+      amo: "§7 Monetization (no affiliate-tag injection)"
+      edge: "§1.10 Advertising"
+    detection_ideas:
+      - "Network: injected affiliate parameters / affiliate cookies set without user action on retail sites."
+    related: [EXT-IMPACT-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Another cluster of potentially malicious Chrome extensions"
+        url: "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+        publisher: "Wladimir Palant (Almost Secure)"
+        date: "2023-06-08"
+        attribution: "Extensions including 'Translator - Select to Translate' and the taken-over 'The Great Suspender' redirected shopping sessions to inject the operator's affiliate ID (e.g. replacing Booking.com's aid parameter) to earn commissions."
+      - title: "SleeperWidget: How Ad-Driven Installs Activate Hidden Browser Extension Behavior"
+        url: "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+        publisher: "Microsoft Edge Extension Security / Browser Vulnerability Research"
+        date: "2026-10-21"
+        attribution: "When the C2 server detected shopping intent it returned a server-controlled destination URL carrying the operator's affiliate tag (e.g. an Amazon link), which the extension opened without validating it."
+    references:
+      - "https://palant.info/2023/06/08/another-cluster-of-potentially-malicious-chrome-extensions/"
+      - "https://microsoftedge.github.io/edgevr/posts/SleeperWidget-How-Ad-Driven-Installs-Activate-Hidden-Browser-Extension-Behavior/"
+
+  - id: EXT-IMPACT-003
+    name: Ad Injection
+    tactic: Impact
+    status: active
+    description: >
+      The extension injects or replaces ads in page content for operator revenue,
+      degrading the page and often unlabeled as extension-originated.
+    platforms: [chrome, edge, firefox, safari]
+    apis: [scripting.executeScript]
+    permissions: ["<all_urls>"]
+    manifest_fingerprint: ["content_scripts", "createElement(\"iframe\")", "insertAdjacentHTML"]
+    store_policy_violations:
+      cws: "Ads"
+      amo: "§7 Monetization (label injected ads)"
+      edge: "§1.10 Advertising"
+    detection_ideas:
+      - "Behavioral: content script inserting ad iframes/markup across sites."
+    related: [EXT-IMPACT-002]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "New OSX/Shlayer Malware Variant Found Using a Dirty New Trick"
+        url: "https://www.intego.com/mac-security-blog/new-osxshlayer-malware-variant-found-using-a-dirty-new-trick/"
+        publisher: "Intego (Vrijenhoek)"
+        date: "2018-04-24"
+        attribution: "OSX/Shlayer installs malicious Safari browser extensions to serve ads; cited by MITRE ATT&CK T1176.001 (S0402)."
+      - title: "Widespread malware campaign seeks to silently inject ads into search results, affects multiple browsers"
+        url: "https://www.microsoft.com/en-us/security/blog/2020/12/10/widespread-malware-campaign-seeks-to-silently-inject-ads-into-search-results-affects-multiple-browsers/"
+        publisher: "Microsoft Threat Intelligence"
+        date: "2020-12-10"
+        attribution: "Adrozek injects ads into search results across multiple browsers; cited by MITRE ATT&CK T1176.001."
+      - title: "Stantinko: A massive adware campaign operating covertly since 2012"
+        url: "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+        publisher: "ESET (Vachon & Faou)"
+        date: "2017-07-20"
+        attribution: "Stantinko installed Chrome extensions that perform ad injection and click fraud; cited by MITRE ATT&CK T1176.001."
+    references:
+      - "https://attack.mitre.org/techniques/T1176/001/"
+      - "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+
+  - id: EXT-IMPACT-004
+    name: Residential-Proxy Node
+    tactic: Impact
+    status: active
+    description: >
+      The extension turns the browser/host into a traffic relay (via the proxy API or an
+      SDK), reselling the user's connection as a residential-proxy exit node.
+    platforms: [chrome, edge, firefox]
+    apis: [proxy.settings.set]
+    permissions: [proxy]
+    manifest_fingerprint: ["proxy", "proxy.settings.set", "pacScript"]
+    store_policy_violations:
+      cws: "Minimum Functionality / Unwanted software"
+      amo: "§7 Monetization"
+      edge: "§2.8 Prohibited; §1.10"
+    detection_ideas:
+      - "Network: browser acting as relay (many outbound connections to residential ranges) + proxy permission."
+    related: [EXT-C2-002]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Mellow Drama: Turning Browsers Into Request Brokers"
+        url: "https://secureannex.com/blog/mellow-drama"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-07-07"
+        attribution: "The Mellowtel monetization library (found across ~45 Chrome, 129 Edge and 71 Firefox extensions; ~1M users) turns the browser into a request broker — receiving target URLs over WebSocket, stripping security headers with declarativeNetRequest, scraping pages via hidden iframes and returning the HTML, reselling users' connections as scraping/proxy exit nodes for Olostep's web-scraping API."
+      - title: "DePIN comes to browser extensions"
+        url: "https://secureannex.com/blog/depin-browser-extensions"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2025-09-01"
+        attribution: "DePIN extensions such as Grass (Wynd Labs), Nodepay, Gradient and DAWN — over 4M users combined — pay users crypto tokens for their 'unused bandwidth,' routing third-party web-scraping requests through users' residential connections to evade bot protection and appear as normal residential users."
+    references:
+      - "https://secureannex.com/blog/mellow-drama"
+      - "https://secureannex.com/blog/depin-browser-extensions"
+
+  - id: EXT-IMPACT-005
+    name: Browser Denial-of-Service / Forced Crash
+    tactic: Impact
+    status: active
+    description: >
+      The extension deliberately crashes or freezes the browser (for example by flooding
+      the runtime messaging system), typically to drive a fake 'repair' prompt that
+      social-engineers the user into running host malware.
+    platforms: [chrome, edge]
+    apis: [runtime.sendMessage, runtime.connect, windows.create]
+    manifest_fingerprint: ["sendMessage({}", "runtime.connect", "Promise.all"]
+    store_policy_violations:
+      cws: "Malicious and Prohibited Products; Quality"
+      amo: "§8 Security/Blocking"
+      edge: "§1.2.2 Unwanted and malicious software"
+    detection_ideas:
+      - "Static: loops creating millions of runtime.sendMessage/connect calls; post-crash popup to an external domain."
+      - "Behavioral: browser instability correlated with an installed extension, followed by a 'fix-it' page prompting clipboard/PowerShell actions (ClickFix)."
+    related: [EXT-C2-005, EXT-INITACC-006]
+    mitre_attack_xref: ["T1176.001", "T1499"]
+    real_world_examples:
+      - title: "Promise Bomb crashes browsers to install malware"
+        url: "https://secureannex.com/blog/promise-bomb"
+        publisher: "Secure Annex (John Tuckner)"
+        date: "2026-02-23"
+        attribution: "CrashFix variants (Pixel Shield, PageGuard) flood Chrome's message passing with 10–100 million unresolvable promises to crash the browser on command, then open a popup to the C2 serving a ClickFix 'your browser crashed, run this to fix it' lure that executes malware via finger.exe."
+      - title: "Malicious Browser Extension CrashFix / KongTuke"
+        url: "https://www.huntress.com/blog/malicious-browser-extention-crashfix-kongtuke"
+        publisher: "Huntress"
+        date: "2026-01"
+        attribution: "The original NexShield extension crashed Chrome via ~a billion runtime port connections, then served a fake 'CrashFix' popup leading to PowerShell malware execution (actor tracked as KongTuke)."
+    references:
+      - "https://secureannex.com/blog/promise-bomb"
+      - "https://www.huntress.com/blog/malicious-browser-extention-crashfix-kongtuke"
+
+  - id: EXT-IMPACT-006
+    name: Cryptojacking
+    tactic: Impact
+    status: proposed
+    description: >
+      The extension runs a cryptocurrency miner in a background context (service worker,
+      offscreen document, or injected page) to consume victim CPU/GPU for the operator's
+      gain.
+    platforms: [chrome, edge, firefox]
+    apis: [WebAssembly.instantiate, Worker]
+    manifest_fingerprint: ["coinhive", "cryptonight", "wasm", "miner", "stratum"]
+    store_policy_violations:
+      cws: "Mining prohibited; Unwanted software"
+      amo: "§7 Monetization"
+      edge: "§2.8 Prohibited"
+    detection_ideas:
+      - "Behavioral: sustained high CPU from a browser worker; mining-pool/stratum connections or known miner WASM."
+    related: [EXT-EXEC-005, EXT-EXEC-004]
+    mitre_attack_xref: ["T1176.001", "T1496"]
+
+  - id: EXT-IMPACT-007
+    name: Click Fraud / Automated Engagement
+    tactic: Impact
+    status: active
+    description: >
+      The extension silently loads ads, clicks links, or drives likes/follows/views in
+      background or hidden contexts to generate fraudulent ad or engagement revenue.
+    platforms: [chrome, edge, firefox]
+    apis: [tabs.create, scripting.executeScript, fetch]
+    manifest_fingerprint: ["iframe", "click", "impression"]
+    store_policy_violations:
+      cws: "Malicious and Prohibited Products; Ads policy"
+      amo: "§8 Security/Blocking"
+      edge: "§1.2.2 Unwanted and malicious software"
+    detection_ideas:
+      - "Network/behavioral: hidden ad loads and synthetic click traffic not tied to user interaction."
+    related: [EXT-IMPACT-003, EXT-EXEC-003]
+    mitre_attack_xref: ["T1176.001"]
+    real_world_examples:
+      - title: "Stantinko: A massive adware campaign operating covertly since 2012"
+        url: "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+        publisher: "ESET (Vachon & Faou)"
+        date: "2017-07-20"
+        attribution: "Stantinko's Chrome extensions received configuration from the C&C to perform click fraud and ad injection, silently monetizing victims; cited by MITRE ATT&CK T1176.001."
+      - title: "Over 20,000,000 of Chrome Users are Victims of Fake Ad Blockers"
+        url: "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+        publisher: "AdGuard (Meshkov)"
+        date: "2018-04-17"
+        attribution: "The fake ad blockers formed a browser botnet that received commands from a remote server and executed attacker-chosen actions in the extension's privileged context."
+    references:
+      - "https://www.welivesecurity.com/2017/07/20/stantinko-massive-adware-campaign-operating-covertly-since-2012/"
+      - "https://adguard.com/en/blog/over-20-000-000-of-chrome-users-are-victims-of-fake-ad-blockers.html"
+
+  - id: EXT-IMPACT-008
+    name: Clipboard / Crypto-Address Swapping
+    tactic: Impact
+    status: proposed
+    description: >
+      A content script watches copy events or the clipboard and replaces a copied
+      cryptocurrency address or payment identifier with an attacker-controlled one,
+      redirecting funds.
+    platforms: [chrome, edge, firefox]
+    apis: [clipboardRead, clipboardWrite, document.execCommand]
+    permissions: [clipboardRead, clipboardWrite]
+    manifest_fingerprint: ["clipboardWrite", "oncopy", "navigator.clipboard.writeText"]
+    detection_ideas:
+      - "Static: clipboard permissions with regex matching wallet-address formats and a replacement write."
+    related: [EXT-CRED-005, EXT-IMPACT-006]
+    mitre_attack_xref: ["T1176.001", "T1565.002"]
+
+  - id: EXT-IMPACT-009
+    name: New-Tab Page Override Hijack
+    tactic: Impact
+    status: proposed
+    description: >
+      The extension uses chrome_url_overrides (or the Firefox equivalent) to replace the
+      new-tab page with an attacker-controlled search or ad page, monetizing every tab
+      the user opens.
+    platforms: [chrome, edge, firefox]
+    apis: [chrome_url_overrides]
+    permissions: []
+    manifest_fingerprint: ["chrome_url_overrides", "newtab"]
+    detection_ideas:
+      - "Static: chrome_url_overrides.newtab pointing to a remote or redirecting page unrelated to the extension's stated purpose."
+    related: [EXT-IMPACT-001, EXT-IMPACT-002]
+    mitre_attack_xref: ["T1176.001", "T1565"]
